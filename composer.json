@@ -1,0 +1,18 @@
+{
+	"name": "dcp/di",
+	"type": "library",
+	"description": "Provides a minimalistic dependency injection container.",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Estel Smith",
+			"email": "estel.smith@gmail.com"
+		}
+	],
+	"autoload": {
+		"psr-0": {"DCP\\Di\\": "src/"}
+	},
+	"keywords": [
+		"dependency-injection"
+	]
+}
