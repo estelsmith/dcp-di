@@ -40,7 +40,4 @@ Example
 	//Register MailerTransportInterface dependencies as a shared MailerTransport instance
 	$di->register('MailerTransportInterface')->asClass('MailerTransport', TRUE, $config['mailer.transport']);
 
-	//In PHP 5.5
-	// $di->register(MailerTransportInterface::class)->asClass(MailerTransport::class, TRUE, $config['mailer.transport']);
-
-	var_dump($di->get('test_mailer'));
+	var_dump($di->get('MailerInterface'));
