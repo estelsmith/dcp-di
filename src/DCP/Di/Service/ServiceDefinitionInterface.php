@@ -31,63 +31,67 @@ namespace DCP\Di\Service;
  */
 interface ServiceDefinitionInterface {
 	/**
-	 * Get the service's name.
+	 * Get the bound service name.
 	 * @return string
 	*/
-	public function getName();
+	public function getBinding();
 
 	/**
 	 * Set the service's name.
-	 * @param string $name
+	 * @param string $binding
 	 * @return DCP\Di\Service\ServiceDefinitionInterface
 	*/
-	public function setName($name);
+	public function setBinding($binding);
 
 	/**
-	 * Get the service's class name.
+	 * Get the bound service's implementation.
 	 * @return string
 	*/
-	public function getClassName();
+	public function getImplementation();
 
 	/**
-	 * Set the service's class name.
-	 * @param string $class_name
+	 * Set the bound service's implementation.
+	 * @param string $implementation
 	 * @return DCP\Di\Service\ServiceDefinitionInterface
 	*/
-	public function setClassName($class_name);
+	public function setImplementation($implementation);
 
 	/**
-	 * Check if the service is configured to be shared.
-	 * @return boolean
-	*/
-	public function getIsShared();
-
-	/**
-	 * Set whether or not the service is supposed to be shared.
-	 * @param boolean $shared
+	 * Set the bound service's implementation.
+	 * @param string $implementation
 	 * @return DCP\Di\Service\ServiceDefinitionInterface
 	*/
-	public function setIsShared($shared);
+	public function to($implementation);
 
 	/**
-	 * Retrieve the constructor parameters for the service.
+	 * Retrieve constructor parameters for the bound service.
 	 * @return array
 	*/
-	public function getParameters();
+	public function getArguments();
 
 	/**
-	 * Set the constructor parameters for the service.
-	 * @param array $parameters
+	 * Set constructor parameters for the bound service.
+	 * @param array $arguments
 	 * @return DCP\Di\Service\ServiceDefinitionInterface
 	*/
-	public function setParameters($parameters);
+	public function setArguments($arguments);
 
 	/**
-	 * Configure class name, shared status, and parameters for the service definition.
-	 * @param string $class_name
-	 * @param boolean $shared
-	 * @param array $params
+	 * Get the bound service's singleton configuration.
+	 * @return boolean
+	*/
+	public function getSingleton();
+
+	/**
+	 * Set the bound service's singleton configuration.
+	 * @param boolean $singleton
 	 * @return DCP\Di\Service\ServiceDefinitionInterface
 	*/
-	public function asClass($class_name, $shared = FALSE, $params = array());
+	public function setSingleton($singleton);
+
+	/**
+	 * Configure service to be a singleton.
+	 * @return DCP\Di\Service\ServiceDefinitionInterface
+	*/
+	public function asSingleton();
 }

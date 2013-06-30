@@ -32,16 +32,16 @@ namespace DCP\Di;
 interface ContainerInterface {
 	/**
 	 * Register a service to be dependency-injected.
-	 * @param string $service_name
-	 * @return DCP\Di\ServiceDependencyInterface
+	 * @param string $binding
+	 * @return DCP\Di\Service\ServiceDefinitionInterface
 	*/
-	public function register($service_name);
+	public function bind($binding);
 
 	/**
 	 * Retrieve a service that has all dependencies injected.
-	 * @param string $service_name
+	 * @param string $binding
 	 * @param array $override_params Inject these into the constructor rather than service definition parameters.
 	 * @return mixed
 	*/
-	public function get($service_name, $override_params = NULL);
+	public function get($binding, $override_params = NULL);
 }

@@ -50,19 +50,19 @@ class Container implements ContainerInterface {
 	/**
 	 * Build all constructor parameters for a service, creating injected dependencies where needed.
 	 * @param DCP\Di\Service\ServiceDefinitionInterface $service
-	 * @param ReflectionMethod $constructor
+	 * @param ReflectionMethod $method
 	 * @param array $override_params
 	 * @return array
 	*/
-	protected function _getServiceParams(ServiceDefinitionInterface $service, ReflectionMethod $constructor, $override_params = NULL) {
+	protected function _getMethodParams(ServiceDefinitionInterface $service, ReflectionMethod $method, $override_params = NULL) {
 		$return_value = NULL;
-		$constructor_params = $service->getParameters();
+		$constructor_params = $service->getArguments();
 		$injected_params = array();
 
 		if ($override_params) {
 			$return_value = $override_params;
 		} else {
-			foreach ($constructor->getParameters() as $param) {
+			foreach ($method->getParameters() as $param) {
 				$param_class = $param->getClass();
 
 				if ($param_class) {
@@ -84,17 +84,16 @@ class Container implements ContainerInterface {
 	*/
 	protected function _createInstance(ServiceDefinitionInterface $service, $override_params = NULL) {
 		$return_value = NULL;
-		$service_name = $service->getName();
-		$class_name = $service->getClassName();
+		$implementation = $service->getImplementation();
 
-		if (class_exists($class_name)) {
-			$class = new ReflectionClass($class_name);
+		if (class_exists($implementation)) {
+			$class = new ReflectionClass($implementation);
 			$constructor = $class->getConstructor();
 
 			if (!($constructor && $constructor->isPublic() && $constructor->getNumberOfParameters() > 0)) {
 				$return_value = $class->newInstance();
 			} else {
-				$params = $this->_getServiceParams($service, $constructor, $override_params);
+				$params = $this->_getMethodParams($service, $constructor, $override_params);
 				$return_value = $class->newInstanceArgs($params);
 			}
 		}
@@ -104,35 +103,35 @@ class Container implements ContainerInterface {
 
 	/**
 	 * Register a service to be dependency-injected.
-	 * @param string $service_name
-	 * @return DCP\Di\ServiceDependencyInterface
+	 * @param string $binding
+	 * @return DCP\Di\Service\ServiceDefinitionInterface
 	*/
-	public function register($service_name) {
-		$definition = new ServiceDefinition($service_name);
+	public function bind($binding) {
+		$definition = new ServiceDefinition($binding);
 
-		$this->_services[$service_name] = $definition;
+		$this->_services[$binding] = $definition;
 
 		return $definition;
 	}
 
 	/**
 	 * Retrieve a service that has all dependencies injected.
-	 * @param string $service_name
+	 * @param string $binding
 	 * @param array $override_params Inject these into the constructor rather than service definition parameters.
 	 * @return mixed
 	*/
-	public function get($service_name, $override_params = NULL) {
+	public function get($binding, $override_params = NULL) {
 		$return_value = NULL;
-		$service = isset($this->_services[$service_name]) ? $this->_services[$service_name] : new ServiceDefinition($service_name, $service_name);
-		$shared = $service->getIsShared();
+		$service = isset($this->_services[$binding]) ? $this->_services[$binding] : new ServiceDefinition($binding, $binding);
+		$shared = $service->getSingleton();
 
-		if ($shared && isset($this->_shared_services[$service_name])) {
-			$return_value = $this->_shared_services[$service_name];
+		if ($shared && isset($this->_shared_services[$binding])) {
+			$return_value = $this->_shared_services[$binding];
 		} else {
 			$return_value = $this->_createInstance($service, $override_params);
 
 			if ($shared) {
-				$this->_shared_services[$service_name] = $return_value;
+				$this->_shared_services[$binding] = $return_value;
 			}
 		}
 

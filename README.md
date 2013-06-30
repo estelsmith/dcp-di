@@ -35,9 +35,13 @@ Example
 
 	$di = new DCP\Di\Container();
 
-	$di->register('MailerInterface')->asClass('Mailer');
+	$di->bind('MailerInterface')
+		->to('Mailer');
 
 	//Register MailerTransportInterface dependencies as a shared MailerTransport instance
-	$di->register('MailerTransportInterface')->asClass('MailerTransport', TRUE, $config['mailer.transport']);
+	$di->bind('MailerTransportInterface')
+		->to('MailerTransport')
+		->setArguments($config['mailer.transport'])
+		->asSingleton();
 
 	var_dump($di->get('MailerInterface'));
