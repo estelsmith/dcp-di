@@ -1,15 +1,55 @@
 <?php
-
+/* Copyright (c) 2013 Estel Smith
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+/**
+ * @package dcp-di
+ * @author Estel Smith <estel.smith@gmail.com>
+ */
 namespace DCP\Di;
 
 use DCP\Di\Service\Definition;
 use DCP\Di\Service\Reference;
 
+/**
+ * @package dcp-di
+ * @author Estel Smith <estel.smith@gmail.com>
+ */
 class Container
 {
+    /**
+     * @var Definition[]
+     */
     protected $services = [];
+
+    /**
+     * @var Definition[]
+     */
     protected $friendlyServices = [];
 
+    /**
+     * Retrieve a configured service from the container.
+     *
+     * @param string $name
+     * @return mixed
+     */
     public function get($name)
     {
         $service = null;
@@ -45,6 +85,13 @@ class Container
         return $service;
     }
 
+    /**
+     * Register a service definition with the container.
+     *
+     * @param string $name
+     * @param string $friendlyName
+     * @return Definition
+     */
     public function register($name, $friendlyName = null)
     {
         $definition = new Definition();
@@ -59,6 +106,14 @@ class Container
         return $definition;
     }
 
+    /**
+     * Instantiates a class.
+     *
+     * @param string $className
+     * @param mixed $arguments
+     * @param mixed $methodCalls
+     * @return mixed
+     */
     protected function createService($className, $arguments = [], $methodCalls = [])
     {
         $finalArguments = [];
@@ -84,6 +139,19 @@ class Container
         return $instance;
     }
 
+    /**
+     * Resolves all constructor arguments for a given class.
+     *
+     * Checks for arguments in the following order:
+     * 1. Explicitly defined argument in the corresponding service definition
+     * 2. Default value of the constructor argument
+     * 3. Possible service injection from the container
+     *
+     * @param string $className
+     * @param Definition $definition
+     * @return mixed
+     * @throws \InvalidArgumentException
+     */
     protected function getConstructorArguments($className, Definition $definition = null)
     {
         $arguments = [];
@@ -123,6 +191,8 @@ class Container
     }
 
     /**
+     * Retrieves a service definition by name. Checks to see if there is a friendly service name defined, first.
+     *
      * @param string $name
      * @return Definition
      */

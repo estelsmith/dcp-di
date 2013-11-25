@@ -5,45 +5,54 @@ Provides a minimalistic dependency injection container.
 Example
 -------
 ```php
+use DCP\Di\Container;
+use DCP\Di\Service\Reference;
+
 interface MailerInterface {}
 
-class Mailer implements MailerInterface {
-	protected $_transport;
+class Mailer implements MailerInterface
+{
+    protected $transport;
 
-	public function __construct(MailerTransportInterface $transport) {
-		$this->_transport = $transport;
-	}
+    public function __construct(MailerTransportInterface $transport)
+    {
+        $this->transport = $transport;
+    }
 }
 
 interface MailerTransportInterface {}
 
-class MailerTransport implements MailerTransportInterface {
-	protected $_host;
-	protected $_port;
+class MailerTransport implements MailerTransportInterface
+{
+    protected $host;
+    protected $port;
 
-	public function __construct($host, $port) {
-		$this->_host = $host;
-		$this->_port = $port;
-	}
+    public function __construct($host, $port)
+    {
+        $this->host = $host;
+        $this->port = $port;
+    }
 }
 
-$config = array(
-	'mailer.transport' => array(
-		'localhost',
-		25
-	)
-);
+$di = new Container();
 
-$di = new DCP\Di\Container();
+$di
+    ->register(MailerInterface::class, 'mailer')
+    ->toClass(Mailer::class)
+;
 
-$di->bind('MailerInterface')
-	->to('Mailer');
+$di
+    ->register(MailerTransportInterface::class)
+    ->toInstance(new Reference(MailerTransport::class))
+;
 
-//Register MailerTransportInterface dependencies as a shared MailerTransport instance
-$di->bind('MailerTransportInterface')
-	->to('MailerTransport')
-	->setArguments($config['mailer.transport'])
-	->asSingleton();
+$di
+    ->register(MailerTransport::class)
+    ->addArguments([
+        'host' => 'localhost',
+        'port' => 25
+    ])
+;
 
-var_dump($di->get('MailerInterface'));
+var_dump($di->get('mailer'));
 ```
