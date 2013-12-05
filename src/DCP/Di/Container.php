@@ -136,6 +136,10 @@ class Container
             call_user_func_array([$instance, $method], $methodArguments);
         }
 
+        if ($instance instanceof ContainerAwareInterface) {
+            call_user_func_array([$instance, 'setContainer'], [$this]);
+        }
+
         return $instance;
     }
 

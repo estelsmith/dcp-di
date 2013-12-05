@@ -1,2 +1,11 @@
-.idea
+# Vagrant metadata
 .vagrant
+
+# PHPStorm Files
+.idea
+
+# Composer dependencies
+vendor/*
+
+# Random test file
+test.php
