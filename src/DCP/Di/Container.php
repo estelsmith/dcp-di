@@ -51,9 +51,13 @@ class Container
                 if (is_object($definition->getService())) {
                     $service = $definition->getService();
                 } else {
-                    $className = $definition->getService();
-                    $arguments = $this->getConstructorArguments($className, $definition);
-                    $service = $this->createInstance($className, $arguments, $definition->getMethodCalls());
+                    if ($definition->getFactory()) {
+                        $service = call_user_func_array($definition->getFactory(), [$definition]);
+                    } else {
+                        $className = $definition->getService();
+                        $arguments = $this->getConstructorArguments($className, $definition);
+                        $service = $this->createInstance($className, $arguments, $definition->getMethodCalls());
+                    }
 
                     if ($definition->isShared()) {
                         $definition->setService($service);

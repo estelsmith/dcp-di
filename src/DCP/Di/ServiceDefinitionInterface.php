@@ -55,6 +55,13 @@ interface ServiceDefinitionInterface
     public function getArguments();
 
     /**
+     * Retrieve the factory method, if it exists.
+     *
+     * @return callable|null
+     */
+    public function getFactory();
+
+    /**
      * Retrieve the list of method calls to be made once the service is initialized.
      *
      * @return mixed
@@ -113,4 +120,12 @@ interface ServiceDefinitionInterface
      * @return $this
      */
     public function toInstance($instance);
+
+    /**
+     * Configure the service to call a factory method for creating the service instance.
+     *
+     * @param callable $factory
+     * @return $this
+     */
+    public function toFactory($factory);
 }

@@ -15,6 +15,8 @@ class ServiceDefinition implements ServiceDefinitionInterface
 
     protected $methodCalls = [];
 
+    protected $factory;
+
     protected $service = '';
 
     protected $serviceType = self::SERVICE_CLASS;
@@ -66,6 +68,14 @@ class ServiceDefinition implements ServiceDefinitionInterface
     public function getArguments()
     {
         return $this->arguments;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getFactory()
+    {
+        return $this->factory;
     }
 
     /**
@@ -137,6 +147,15 @@ class ServiceDefinition implements ServiceDefinitionInterface
         $this->serviceType = self::SERVICE_INSTANCE;
         $this->service = $instance;
 
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function toFactory($factory)
+    {
+        $this->factory = $factory;
         return $this;
     }
 }
