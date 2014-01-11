@@ -48,9 +48,17 @@ class Container
                 break;
 
             case ServiceDefinition::SERVICE_CLASS:
-                $className = $definition->getService();
-                $arguments = $this->getConstructorArguments($className, $definition);
-                $service = $this->createInstance($className, $arguments, $definition->getMethodCalls());
+                if (is_object($definition->getService())) {
+                    $service = $definition->getService();
+                } else {
+                    $className = $definition->getService();
+                    $arguments = $this->getConstructorArguments($className, $definition);
+                    $service = $this->createInstance($className, $arguments, $definition->getMethodCalls());
+
+                    if ($definition->isShared()) {
+                        $definition->setService($service);
+                    }
+                }
                 break;
 
             default:

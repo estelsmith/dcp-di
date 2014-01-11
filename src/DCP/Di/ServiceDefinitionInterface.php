@@ -41,6 +41,13 @@ interface ServiceDefinitionInterface
     public function addMethodCall($method, array $arguments = []);
 
     /**
+     * Configure the service to be a shared instance.
+     *
+     * @return $this
+     */
+    public function asShared();
+
+    /**
      * Retrieve the list of constructor arguments.
      *
      * @return mixed
@@ -67,6 +74,13 @@ interface ServiceDefinitionInterface
      * @return string
      */
     public function getServiceType();
+
+    /**
+     * Return whether or not the service is shared.
+     *
+     * @return bool
+     */
+    public function isShared();
 
     /**
      * Sets the list of constructor arguments by name.

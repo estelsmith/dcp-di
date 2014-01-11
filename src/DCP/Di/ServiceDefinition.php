@@ -19,6 +19,8 @@ class ServiceDefinition implements ServiceDefinitionInterface
 
     protected $serviceType = self::SERVICE_CLASS;
 
+    protected $shared = false;
+
     /**
      * {@inheritdoc}
      */
@@ -52,6 +54,15 @@ class ServiceDefinition implements ServiceDefinitionInterface
     /**
      * {@inheritdoc}
      */
+    public function asShared()
+    {
+        $this->shared = true;
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getArguments()
     {
         return $this->arguments;
@@ -79,6 +90,14 @@ class ServiceDefinition implements ServiceDefinitionInterface
     public function getServiceType()
     {
         return $this->serviceType;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isShared()
+    {
+        return $this->shared;
     }
 
     /**
