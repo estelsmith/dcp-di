@@ -3,13 +3,13 @@
  * @package dcp-di
  * @author Estel Smith <estel.smith@gmail.com>
  */
-namespace DCP\Di\Service;
+namespace DCP\Di;
 
 /**
  * @package dcp-di
  * @author Estel Smith <estel.smith@gmail.com>
  */
-interface DefinitionInterface
+interface ServiceDefinitionInterface
 {
     const SERVICE_CLASS = 'class';
     const SERVICE_INSTANCE = 'instance';

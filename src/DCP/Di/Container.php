@@ -5,9 +5,6 @@
  */
 namespace DCP\Di;
 
-use DCP\Di\Service\Definition;
-use DCP\Di\Service\Reference;
-
 /**
  * @package dcp-di
  * @author Estel Smith <estel.smith@gmail.com>
@@ -15,12 +12,12 @@ use DCP\Di\Service\Reference;
 class Container
 {
     /**
-     * @var Definition[]
+     * @var ServiceDefinition[]
      */
     protected $services = [];
 
     /**
-     * @var Definition[]
+     * @var ServiceDefinition[]
      */
     protected $friendlyServices = [];
 
@@ -39,10 +36,10 @@ class Container
         $serviceType = $definition ? $definition->getServiceType() : null;
 
         switch ($serviceType) {
-            case Definition::SERVICE_INSTANCE:
+            case ServiceDefinition::SERVICE_INSTANCE:
                 $definitionService = $definition->getService();
 
-                if ($definitionService instanceof Reference) {
+                if ($definitionService instanceof ServiceReference) {
                     $service = $this->get((string)$definitionService);
                     $definition->setService($service);
                 } else {
@@ -50,7 +47,7 @@ class Container
                 }
                 break;
 
-            case Definition::SERVICE_CLASS:
+            case ServiceDefinition::SERVICE_CLASS:
                 $className = $definition->getService();
                 $arguments = $this->getConstructorArguments($className, $definition);
                 $service = $this->createService($className, $arguments, $definition->getMethodCalls());
@@ -70,11 +67,11 @@ class Container
      *
      * @param string $name
      * @param string $friendlyName
-     * @return Definition
+     * @return ServiceDefinition
      */
     public function register($name, $friendlyName = null)
     {
-        $definition = new Definition();
+        $definition = new ServiceDefinition();
         $definition->setService($name);
 
         $this->services[$name] = $definition;
@@ -99,7 +96,7 @@ class Container
         $finalArguments = [];
 
         foreach ($arguments as $argument) {
-            $finalArguments[] = $argument instanceof Reference ? $this->get((string)$argument) : $argument;
+            $finalArguments[] = $argument instanceof ServiceReference ? $this->get((string)$argument) : $argument;
         }
 
         $class = new \ReflectionClass($className);
@@ -110,7 +107,7 @@ class Container
             $methodArguments = [];
 
             foreach ($arguments as $methodArgument) {
-                $methodArguments[] = $methodArgument instanceof Reference ? $this->get((string)$methodArgument) : $methodArgument;
+                $methodArguments[] = $methodArgument instanceof ServiceReference ? $this->get((string)$methodArgument) : $methodArgument;
             }
 
             call_user_func_array([$instance, $method], $methodArguments);
@@ -132,11 +129,11 @@ class Container
      * 3. Possible service injection from the container
      *
      * @param string $className
-     * @param Definition $definition
+     * @param ServiceDefinition $definition
      * @return mixed
      * @throws \InvalidArgumentException
      */
-    protected function getConstructorArguments($className, Definition $definition = null)
+    protected function getConstructorArguments($className, ServiceDefinition $definition = null)
     {
         $arguments = [];
         $definitionArguments = $definition ? $definition->getArguments() : [];
@@ -162,7 +159,7 @@ class Container
 
                         // Since there is no default value, try injecting from the container.
                         if ($parameterClass) {
-                            $arguments[] = new Reference($parameterClass->getName());
+                            $arguments[] = new ServiceReference($parameterClass->getName());
                         } else {
                             throw new \InvalidArgumentException(sprintf('The constructor for "%s" has a parameter "%s" that could not be resolved.', $className, $parameterName));
                         }
@@ -178,7 +175,7 @@ class Container
      * Retrieves a service definition by name. Checks to see if there is a friendly service name defined, first.
      *
      * @param string $name
-     * @return Definition
+     * @return ServiceDefinition
      */
     protected function getServiceDefinition($name)
     {

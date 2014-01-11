@@ -3,13 +3,13 @@
  * @package dcp-di
  * @author Estel Smith <estel.smith@gmail.com>
  */
-namespace DCP\Di\Service;
+namespace DCP\Di;
 
 /**
  * @package dcp-di
  * @author Estel Smith <estel.smith@gmail.com>
  */
-class Definition implements DefinitionInterface
+class ServiceDefinition implements ServiceDefinitionInterface
 {
     protected $arguments = [];
 
