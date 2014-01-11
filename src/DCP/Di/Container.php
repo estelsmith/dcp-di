@@ -125,8 +125,8 @@ class Container
      *
      * Checks for arguments in the following order:
      * 1. Explicitly defined argument in the corresponding service definition
-     * 2. Default value of the constructor argument
-     * 3. Possible service injection from the container
+     * 2. Service injection from the container
+     * 3. Default value of the constructor argument
      *
      * @param string $className
      * @param ServiceDefinition $definition
@@ -151,15 +151,13 @@ class Container
                 if (isset($definitionArguments[$parameterName])) {
                     $arguments[] = $definitionArguments[$parameterName];
                 } else {
-                    // Use the argument's default value, if it's available.
-                    if ($parameter->isDefaultValueAvailable()) {
-                        $arguments[] = $parameter->getDefaultValue();
-                    } else {
-                        $parameterClass = $parameter->getClass();
+                    $parameterClass = $parameter->getClass();
 
-                        // Since there is no default value, try injecting from the container.
-                        if ($parameterClass) {
-                            $arguments[] = new ServiceReference($parameterClass->getName());
+                    if ($parameterClass) {
+                        $arguments[] = new ServiceReference($parameterClass->getName());
+                    } else {
+                        if ($parameter->isDefaultValueAvailable()) {
+                            $arguments[] = $parameter->getDefaultValue();
                         } else {
                             throw new \InvalidArgumentException(sprintf('The constructor for "%s" has a parameter "%s" that could not be resolved.', $className, $parameterName));
                         }
