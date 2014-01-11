@@ -55,10 +55,10 @@ interface DefinitionInterface
      * Configure the service to call a method with given arguments after being constructed.
      *
      * @param string $method
-     * @param mixed $arguments
+     * @param array $arguments
      * @return $this
      */
-    public function addMethodCall($method, $arguments);
+    public function addMethodCall($method, array $arguments = []);
 
     /**
      * Retrieve the list of constructor arguments.

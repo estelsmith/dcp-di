@@ -62,7 +62,7 @@ class Definition implements DefinitionInterface
     /**
      * {@inheritdoc}
      */
-    public function addMethodCall($method, $arguments)
+    public function addMethodCall($method, array $arguments = [])
     {
         $this->methodCalls[$method] = $arguments;
 
