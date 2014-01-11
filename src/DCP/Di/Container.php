@@ -31,7 +31,7 @@ class Container
     {
         $service = null;
 
-        $definition = $this->getServiceDefinition($name);
+        $definition = $this->findServiceDefinition($name);
 
         $serviceType = $definition ? $definition->getServiceType() : null;
 
@@ -50,12 +50,12 @@ class Container
             case ServiceDefinition::SERVICE_CLASS:
                 $className = $definition->getService();
                 $arguments = $this->getConstructorArguments($className, $definition);
-                $service = $this->createService($className, $arguments, $definition->getMethodCalls());
+                $service = $this->createInstance($className, $arguments, $definition->getMethodCalls());
                 break;
 
             default:
                 $arguments = $this->getConstructorArguments($name);
-                $service = $this->createService($name, $arguments);
+                $service = $this->createInstance($name, $arguments);
                 break;
         }
 
@@ -91,7 +91,7 @@ class Container
      * @param mixed $methodCalls
      * @return mixed
      */
-    protected function createService($className, $arguments = [], $methodCalls = [])
+    protected function createInstance($className, $arguments = [], $methodCalls = [])
     {
         $finalArguments = [];
 
@@ -175,7 +175,7 @@ class Container
      * @param string $name
      * @return ServiceDefinition
      */
-    protected function getServiceDefinition($name)
+    protected function findServiceDefinition($name)
     {
         $definition = null;
 
