@@ -5,127 +5,48 @@
  */
 namespace DCP\Di;
 
+use DCP\Di\Definition\ClassDefinition;
+use DCP\Di\Definition\FactoryDefinition;
+
 /**
  * @package dcp-di
  * @author Estel Smith <estel.smith@gmail.com>
  */
-class ServiceDefinition implements ServiceDefinitionInterface
+class ServiceDefinition implements ServiceDefinitionInterface, ServiceDefinitionGettersInterface
 {
-    protected $arguments = [];
+    protected $type;
+    protected $className;
+    protected $friendlyName;
 
-    protected $methodCalls = [];
-
-    protected $factory;
-
-    protected $service = '';
-
-    protected $serviceType = self::SERVICE_CLASS;
-
-    protected $shared = false;
-
-    /**
-     * {@inheritdoc}
-     */
-    public function addArgument($name, $argument)
+    public function __construct($className, $friendlyName = null)
     {
-        $this->arguments[$name] = $argument;
-
-        return $this;
+        $this->className = $className;
+        $this->friendlyName = $friendlyName;
+        $this->toSelf();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addArguments($arguments)
+    public function getClassName()
     {
-        $this->arguments = array_merge($this->arguments, $arguments);
-
-        return $this;
+        return $this->className;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addMethodCall($method, array $arguments = [])
+    public function getFriendlyName()
     {
-        $this->methodCalls[$method] = $arguments;
-
-        return $this;
+        return $this->friendlyName;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function asShared()
+    public function getType()
     {
-        $this->shared = true;
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getArguments()
-    {
-        return $this->arguments;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getFactory()
-    {
-        return $this->factory;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getMethodCalls()
-    {
-        return $this->methodCalls;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getService()
-    {
-        return $this->service;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getServiceType()
-    {
-        return $this->serviceType;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function isShared()
-    {
-        return $this->shared;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setArguments($arguments)
-    {
-        $this->arguments = $arguments;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function setService($service)
-    {
-        $this->service = $service;
+        return $this->type;
     }
 
     /**
@@ -133,29 +54,28 @@ class ServiceDefinition implements ServiceDefinitionInterface
      */
     public function toClass($class)
     {
-        $this->serviceType = self::SERVICE_CLASS;
-        $this->service = $class;
-
-        return $this;
+        $type = new ClassDefinition($class);
+        $this->type = $type;
+        return $type;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function toInstance($instance)
+    public function toSelf()
     {
-        $this->serviceType = self::SERVICE_INSTANCE;
-        $this->service = $instance;
-
-        return $this;
+        $type = new ClassDefinition($this->className);
+        $this->type = $type;
+        return $type;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function toFactory($factory)
+    public function toFactory($callback)
     {
-        $this->factory = $factory;
-        return $this;
+        $type = new FactoryDefinition($callback);
+        $this->type = $type;
+        return $type;
     }
 }

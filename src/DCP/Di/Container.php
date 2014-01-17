@@ -4,6 +4,8 @@
  * @author Estel Smith <estel.smith@gmail.com>
  */
 namespace DCP\Di;
+use DCP\Di\Definition\FactoryDefinition;
+use DCP\Di\Definition\ClassDefinitionGettersInterface;
 
 /**
  * @package dcp-di
@@ -12,14 +14,24 @@ namespace DCP\Di;
 class Container
 {
     /**
-     * @var ServiceDefinition[]
+     * @var \SplObjectStorage
      */
-    protected $services = [];
+    protected $sharedInstances;
 
     /**
-     * @var ServiceDefinition[]
+     * @var ServiceDefinitionGettersInterface[]
      */
-    protected $friendlyServices = [];
+    protected $definitions = [];
+
+    /**
+     * @var ServiceDefinitionGettersInterface[]
+     */
+    protected $friendlyDefinitions = [];
+
+    public function __construct()
+    {
+        $this->sharedInstances = new \SplObjectStorage();
+    }
 
     /**
      * Retrieve a configured service from the container.
@@ -31,44 +43,26 @@ class Container
     {
         $service = null;
 
+        $sharedInstances = $this->sharedInstances;
         $definition = $this->findServiceDefinition($name);
 
-        $serviceType = $definition ? $definition->getServiceType() : null;
+        if ($sharedInstances->contains($definition)) {
+            $service = $sharedInstances->offsetGet($definition);
+        } else {
+            $definitionType = $definition->getType();
+            $definitionTypeName = get_class($definitionType);
 
-        switch ($serviceType) {
-            case ServiceDefinition::SERVICE_INSTANCE:
-                $definitionService = $definition->getService();
+            $instantiator = [$this, 'createInstance'];
 
-                if ($definitionService instanceof ServiceReference) {
-                    $service = $this->get((string)$definitionService);
-                    $definition->setService($service);
-                } else {
-                    $service = $definition->getService();
-                }
-                break;
+            if ($definitionTypeName === FactoryDefinition::class) {
+                $instantiator = $definitionType->getFactory();
+            }
 
-            case ServiceDefinition::SERVICE_CLASS:
-                if (is_object($definition->getService())) {
-                    $service = $definition->getService();
-                } else {
-                    if ($definition->getFactory()) {
-                        $service = call_user_func_array($definition->getFactory(), [$definition]);
-                    } else {
-                        $className = $definition->getService();
-                        $arguments = $this->getConstructorArguments($className, $definition);
-                        $service = $this->createInstance($className, $arguments, $definition->getMethodCalls());
-                    }
+            $service = call_user_func_array($instantiator, [$definitionType]);
 
-                    if ($definition->isShared()) {
-                        $definition->setService($service);
-                    }
-                }
-                break;
-
-            default:
-                $arguments = $this->getConstructorArguments($name);
-                $service = $this->createInstance($name, $arguments);
-                break;
+            if ($definitionType->isShared()) {
+                $sharedInstances->offsetSet($definition, $service);
+            }
         }
 
         return $service;
@@ -77,19 +71,18 @@ class Container
     /**
      * Register a service definition with the container.
      *
-     * @param string $name
+     * @param string $className
      * @param string $friendlyName
-     * @return ServiceDefinition
+     * @return ServiceDefinitionInterface
      */
-    public function register($name, $friendlyName = null)
+    public function register($className, $friendlyName = null)
     {
-        $definition = new ServiceDefinition();
-        $definition->setService($name);
+        $definition = new ServiceDefinition($className, $friendlyName);
 
-        $this->services[$name] = $definition;
+        $this->definitions[$className] = $definition;
 
         if ($friendlyName) {
-            $this->friendlyServices[$friendlyName] = $definition;
+            $this->friendlyDefinitions[$friendlyName] = $definition;
         }
 
         return $definition;
@@ -98,30 +91,21 @@ class Container
     /**
      * Instantiates a class.
      *
-     * @param string $className
-     * @param mixed $arguments
-     * @param mixed $methodCalls
+     * @param ClassDefinitionGettersInterface $definitionType
      * @return mixed
      */
-    protected function createInstance($className, $arguments = [], $methodCalls = [])
+    protected function createInstance(ClassDefinitionGettersInterface $definitionType)
     {
-        $finalArguments = [];
+        $className = $definitionType->getClass();
+        $arguments = $this->getConstructorArguments($className, $definitionType->getArguments());
+        $methodCalls = $definitionType->getMethodCalls();
+        $finalArguments = $this->hydrateServiceReferences($arguments);
 
-        foreach ($arguments as $argument) {
-            $finalArguments[] = $argument instanceof ServiceReference ? $this->get((string)$argument) : $argument;
-        }
+        $instance = (new \ReflectionClass($className))->newInstanceArgs($finalArguments);
 
-        $class = new \ReflectionClass($className);
-
-        $instance = $class->newInstanceArgs($finalArguments);
-
-        foreach ($methodCalls as $method => $arguments) {
-            $methodArguments = [];
-
-            foreach ($arguments as $methodArgument) {
-                $methodArguments[] = $methodArgument instanceof ServiceReference ? $this->get((string)$methodArgument) : $methodArgument;
-            }
-
+        foreach ($methodCalls as $methodCall) {
+            list($method, $arguments) = $methodCall;
+            $methodArguments = $this->hydrateServiceReferences($arguments);
             call_user_func_array([$instance, $method], $methodArguments);
         }
 
@@ -141,14 +125,13 @@ class Container
      * 3. Default value of the constructor argument
      *
      * @param string $className
-     * @param ServiceDefinition $definition
+     * @param array $definitionArguments
      * @return mixed
      * @throws \InvalidArgumentException
      */
-    protected function getConstructorArguments($className, ServiceDefinition $definition = null)
+    protected function getConstructorArguments($className, array $definitionArguments = [])
     {
         $arguments = [];
-        $definitionArguments = $definition ? $definition->getArguments() : [];
 
         $class = new \ReflectionClass($className);
         $constructor = $class->getConstructor();
@@ -185,18 +168,35 @@ class Container
      * Retrieves a service definition by name. Checks to see if there is a friendly service name defined, first.
      *
      * @param string $name
-     * @return ServiceDefinition
+     * @return ServiceDefinitionGettersInterface
      */
     protected function findServiceDefinition($name)
     {
         $definition = null;
 
-        if (isset($this->friendlyServices[$name])) {
-            $definition = $this->friendlyServices[$name];
-        } elseif (isset($this->services[$name])) {
-            $definition = $this->services[$name];
+        if (isset($this->friendlyDefinitions[$name])) {
+            $definition = $this->friendlyDefinitions[$name];
+        } elseif (isset($this->definitions[$name])) {
+            $definition = $this->definitions[$name];
+        } else {
+            $definition = new ServiceDefinition($name);
         }
 
         return $definition;
+    }
+
+    /**
+     * @param array $items
+     * @return array
+     */
+    protected function hydrateServiceReferences(array $items)
+    {
+        $returnValue = [];
+
+        foreach ($items as $item) {
+            $returnValue[] = $item instanceof ServiceReference ? $this->get((string)$item) : $item;
+        }
+
+        return $returnValue;
     }
 }
