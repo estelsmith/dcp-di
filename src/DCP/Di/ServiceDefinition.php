@@ -22,7 +22,7 @@ class ServiceDefinition implements ServiceDefinitionInterface, ServiceDefinition
     {
         $this->className = $className;
         $this->friendlyName = $friendlyName;
-        $this->toSelf();
+        $this->toClass();
     }
 
     /**
@@ -52,19 +52,10 @@ class ServiceDefinition implements ServiceDefinitionInterface, ServiceDefinition
     /**
      * {@inheritdoc}
      */
-    public function toClass($class)
+    public function toClass($class = null)
     {
-        $type = new ClassDefinition($class);
-        $this->type = $type;
-        return $type;
-    }
+        $type = new ClassDefinition($class ?: $this->className);
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toSelf()
-    {
-        $type = new ClassDefinition($this->className);
         $this->type = $type;
         return $type;
     }

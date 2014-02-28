@@ -18,12 +18,7 @@ interface ServiceDefinitionInterface
      * @param string $class
      * @return ClassDefinitionInterface
      */
-    public function toClass($class);
-
-    /**
-     * @return ClassDefinitionInterface
-     */
-    public function toSelf();
+    public function toClass($class = null);
 
     /**
      * @param callable $callback
