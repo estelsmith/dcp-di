@@ -68,6 +68,11 @@ class Container
         return $service;
     }
 
+    public function has($name)
+    {
+        return !is_null($this->findServiceDefinition($name, false));
+    }
+
     /**
      * Register a service definition with the container.
      *
@@ -141,23 +146,39 @@ class Container
 
             foreach ($parameters as $parameter) {
                 $parameterName = $parameter->getName();
+                $argument = null;
 
-                // Set the argument, if it was provided by the service definition.
+                // Set the argument if it was provided by the service definition
                 if (isset($definitionArguments[$parameterName])) {
-                    $arguments[] = $definitionArguments[$parameterName];
+                    $argument = $definitionArguments[$parameterName];
                 } else {
+                    $argumentSet = false;
                     $parameterClass = $parameter->getClass();
 
+                    // Set the argument if it's instantiable or has a service definition in the container
                     if ($parameterClass) {
-                        $arguments[] = new ServiceReference($parameterClass->getName());
-                    } else {
-                        if ($parameter->isDefaultValueAvailable()) {
-                            $arguments[] = $parameter->getDefaultValue();
-                        } else {
-                            throw new \InvalidArgumentException(sprintf('The constructor for "%s" has a parameter "%s" that could not be resolved.', $className, $parameterName));
+                        $isInstantiable = $parameterClass->isInstantiable();
+                        $parameterClassName = $parameterClass->getName();
+
+                        if ($isInstantiable || $this->has($parameterClassName)) {
+                            $argument = new ServiceReference($parameterClassName);
+                            $argumentSet = true;
                         }
                     }
+
+                    // Set the argument if it hasn't already been set, and a default value exists
+                    if (!$argumentSet && $parameter->isDefaultValueAvailable()) {
+                        $argument = $parameter->getDefaultValue();
+                        $argumentSet = true;
+                    }
+
+                    // Cry, because the container couldn't resolve the dependency.
+                    if (!$argumentSet) {
+                        throw new \InvalidArgumentException(sprintf('The constructor for "%s" has a parameter "%s" that could not be resolved.', $className, $parameterName));
+                    }
                 }
+
+                $arguments[] = $argument;
             }
         }
 
@@ -168,9 +189,10 @@ class Container
      * Retrieves a service definition by name. Checks to see if there is a friendly service name defined, first.
      *
      * @param string $name
+     * @param bool $makeDefault
      * @return ServiceDefinitionGettersInterface
      */
-    protected function findServiceDefinition($name)
+    protected function findServiceDefinition($name, $makeDefault = true)
     {
         $definition = null;
 
@@ -178,7 +200,7 @@ class Container
             $definition = $this->friendlyDefinitions[$name];
         } elseif (isset($this->definitions[$name])) {
             $definition = $this->definitions[$name];
-        } else {
+        } elseif ($makeDefault) {
             $definition = new ServiceDefinition($name);
         }
 
