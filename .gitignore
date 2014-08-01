@@ -1,11 +1,9 @@
-# Vagrant metadata
-.vagrant
-
 # PHPStorm Files
 .idea
 
 # Composer dependencies
-vendor/*
+vendor
+bin
 
 # Random test file
 test.php
