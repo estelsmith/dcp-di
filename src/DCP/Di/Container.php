@@ -6,12 +6,14 @@
 namespace DCP\Di;
 use DCP\Di\Definition\FactoryDefinition;
 use DCP\Di\Definition\ClassDefinitionGettersInterface;
+use DCP\Di\Exception\CannotResolveException;
+use DCP\Di\Exception\NotFoundException;
 
 /**
  * @package dcp-di
  * @author Estel Smith <estel.smith@gmail.com>
  */
-class Container
+class Container implements ContainerInterface
 {
     /**
      * @var \SplObjectStorage
@@ -34,17 +36,14 @@ class Container
     }
 
     /**
-     * Retrieve a configured service from the container.
-     *
-     * @param string $name
-     * @return mixed
+     * {@inheritdoc}
      */
-    public function get($name)
+    public function get($id)
     {
         $service = null;
 
         $sharedInstances = $this->sharedInstances;
-        $definition = $this->findServiceDefinition($name);
+        $definition = $this->findServiceDefinition($id);
 
         if ($sharedInstances->contains($definition)) {
             $service = $sharedInstances->offsetGet($definition);
@@ -66,20 +65,23 @@ class Container
             }
         }
 
+        if (!$service) {
+            throw new NotFoundException();
+        }
+
         return $service;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function has($name)
     {
         return !is_null($this->findServiceDefinition($name, false));
     }
 
     /**
-     * Register a service definition with the container.
-     *
-     * @param string $className
-     * @param string $friendlyName
-     * @return ServiceDefinitionInterface
+     * {@inheritdoc}
      */
     public function register($className, $friendlyName = null)
     {
@@ -133,7 +135,7 @@ class Container
      * @param string $className
      * @param array $definitionArguments
      * @return mixed
-     * @throws \InvalidArgumentException
+     * @throws CannotResolveException
      */
     protected function getConstructorArguments($className, array $definitionArguments = [])
     {
@@ -175,7 +177,7 @@ class Container
 
                     // Cry, because the container couldn't resolve the dependency.
                     if (!$argumentSet) {
-                        throw new \InvalidArgumentException(sprintf('The constructor for "%s" has a parameter "%s" that could not be resolved.', $className, $parameterName));
+                        throw new CannotResolveException(sprintf('The constructor for "%s" has a parameter "%s" that could not be resolved.', $className, $parameterName));
                     }
                 }
 
