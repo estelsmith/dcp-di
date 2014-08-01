@@ -50,15 +50,16 @@ class Container
             $service = $sharedInstances->offsetGet($definition);
         } else {
             $definitionType = $definition->getType();
-            $definitionTypeName = get_class($definitionType);
 
-            $instantiator = [$this, 'createInstance'];
+            $constructor = [$this, 'createInstance'];
+            $arguments = [$definitionType];
 
-            if ($definitionTypeName === FactoryDefinition::class) {
-                $instantiator = $definitionType->getFactory();
+            if ($definitionType instanceof FactoryDefinition) {
+                $constructor = $definitionType->getFactory();
+                $arguments = [$this];
             }
 
-            $service = call_user_func_array($instantiator, [$definitionType]);
+            $service = call_user_func_array($constructor, $arguments);
 
             if ($definitionType->isShared()) {
                 $sharedInstances->offsetSet($definition, $service);
@@ -99,7 +100,7 @@ class Container
      * @param ClassDefinitionGettersInterface $definitionType
      * @return mixed
      */
-    protected function createInstance(ClassDefinitionGettersInterface $definitionType)
+    protected function createClassInstance(ClassDefinitionGettersInterface $definitionType)
     {
         $className = $definitionType->getClass();
         $arguments = $this->getConstructorArguments($className, $definitionType->getArguments());
