@@ -50,7 +50,7 @@ class Container implements ContainerInterface
         } else {
             $definitionType = $definition->getType();
 
-            $constructor = [$this, 'createInstance'];
+            $constructor = [$this, 'createClassInstance'];
             $arguments = [$definitionType];
 
             if ($definitionType instanceof FactoryDefinition) {
