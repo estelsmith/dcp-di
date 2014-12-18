@@ -160,7 +160,13 @@ class Container implements ContainerInterface
                     $argument = $definitionArguments[$parameterName];
                 } else {
                     $argumentSet = false;
-                    $parameterClass = $parameter->getClass();
+                    $parameterClass = null;
+
+                    try {
+                        $parameterClass = $parameter->getClass();
+                    } catch (\ReflectionException $exception) {
+                        // Do nothing. I just don't care if parameterClass doesn't exist.
+                    }
 
                     // Set the argument if it's instantiable or has a service definition in the container
                     if ($parameterClass) {
