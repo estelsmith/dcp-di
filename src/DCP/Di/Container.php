@@ -140,9 +140,13 @@ class Container implements ContainerInterface
     protected function getConstructorArguments($className, array $definitionArguments = [])
     {
         $arguments = [];
+        $class = null;
+        $constructor = null;
 
-        $class = new \ReflectionClass($className);
-        $constructor = $class->getConstructor();
+        if (class_exists($className)) {
+            $class = new \ReflectionClass($className);
+            $constructor = $class->getConstructor();
+        }
 
         if ($constructor) {
             $parameters = $constructor->getParameters();
