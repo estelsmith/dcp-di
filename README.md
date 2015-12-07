@@ -1,3 +1,5 @@
+# *WARNING: UNMAINTAINED!*
+
 About
 =====
 Provides a minimalistic dependency injection container.
